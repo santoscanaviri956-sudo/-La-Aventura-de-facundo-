@@ -1,0 +1,13 @@
+<!-- Esta pantalla permite cambiar el sonido y el volumen. -->
+<!-- Ajustes de sonido, música y volumen. -->
+<div id="pantalla-opciones" class="pantalla">
+    <div class="pantalla-contenido">
+        <h2 class="titulo-pantalla">OPCIONES</h2>
+        <div class="opciones-contenedor">
+            <div class="opcion-fila"><span class="opcion-label">Sonido</span><button id="btn-sonido" class="btn-toggle" onclick="toggleSonido()">ON</button></div>
+            <div class="opcion-fila"><span class="opcion-label">Musica</span><button id="btn-musica" class="btn-toggle" onclick="toggleMusica()">ON</button></div>
+            <div class="opcion-fila"><span class="opcion-label">Volumen</span><input type="range" id="volumen" min="0" max="100" value="70" class="slider-volumen"></div>
+        </div>
+        <button class="btn-volver" onclick="mostrarPantalla('pantalla-menu')"><img src="../Recursos Graficos/botones/boton de volver.png" alt="Volver"></button>
+    </div>
+</div>

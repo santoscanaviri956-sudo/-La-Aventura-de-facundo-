@@ -1,0 +1,9 @@
+<!-- Esta pantalla contiene la partida principal. -->
+<!-- Partida principal: HUD, canvas y controles para dispositivos táctiles. -->
+<div id="pantalla-juego" class="pantalla">
+    <div class="juego-contenedor">
+        <div class="hud"><div class="hud-izquierda"><div class="hud-vida"><span class="corazones-vida" id="hud-corazones"><span class="corazon" aria-label="Vida 1">&#9829;</span><span class="corazon" aria-label="Vida 2">&#9829;</span><span class="corazon" aria-label="Vida 3">&#9829;</span></span></div><div class="hud-puntaje"><span class="hud-icono-generado icono-puntaje" aria-label="Puntaje">&#9733;</span><span id="hud-puntaje-texto">0</span></div></div><div class="hud-derecha"><div class="hud-tiempo"><span class="hud-icono-generado icono-tiempo" aria-label="Tiempo">&#9201;</span><span id="hud-tiempo-texto">03:00</span></div><button class="btn-pausa" onclick="pausarJuego()">||</button></div></div>
+        <canvas id="canvas-juego"></canvas>
+        <div class="controles-moviles"><div class="controles-moviles-izquierda"><button class="btn-control" id="btn-izquierda" data-direccion="izquierda"><img src="../Recursos Graficos/botones/boton de movimiento.png" alt="Izquierda" class="btn-control-img btn-izq-img"></button><button class="btn-control" id="btn-derecha" data-direccion="derecha"><img src="../Recursos Graficos/botones/boton de movimiento.png" alt="Derecha" class="btn-control-img btn-der-img"></button></div><div class="controles-moviles-derecha"><button class="btn-control btn-saltar" id="btn-saltar"><img src="../Recursos Graficos/botones/boton movimiento.png" alt="Saltar" class="btn-control-img"></button></div></div>
+    </div>
+</div>

@@ -1,0 +1,41 @@
+<!-- Aqui se carga todo el juego. -->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Aventura de Facundo</title>
+    <!-- Hoja de estilos principal, que importa los estilos especializados. -->
+    <link rel="stylesheet" href="juego.css">
+</head>
+
+<body>
+    <!-- Las pantallas del juego se insertan aquí desde vistas.js. -->
+    <main id="app"></main>
+
+    <!-- Carga de vistas, estado y recursos compartidos. -->
+    <script src="modulos/vistas.js"></script>
+    <script src="modulos/estado.js"></script>
+    <script src="modulos/imagenes.js"></script>
+    <script src="modulos/controles.js"></script>
+    <!-- Datos y lógica de niveles, entidades y navegación. -->
+    <script src="modulos/juego-datos.js"></script>
+    <script src="modulos/juego-niveles.js"></script>
+    <script src="modulos/juego-estado.js"></script>
+    <script src="modulos/juego-utilidades.js"></script>
+    <script src="modulos/juego-entidades.js"></script>
+    <script src="modulos/juego-menu.js"></script>
+    <script src="modulos/juego-nivel.js"></script>
+    <script src="modulos/juego-preguntas.js"></script>
+    <script src="modulos/juego-vidas.js"></script>
+    <script src="modulos/juego-parkour.js"></script>
+    <script src="modulos/juego-progreso.js"></script>
+    <script src="modulos/juego-pausa.js"></script>
+    <script src="modulos/juego-colisiones.js"></script>
+    <!-- Coordinador e inicialización final, después de cargar las dependencias. -->
+    <script src="juego.js"></script>
+    <script src="modulos/juego-inicializacion.js"></script>
+</body>
+
+</html>
