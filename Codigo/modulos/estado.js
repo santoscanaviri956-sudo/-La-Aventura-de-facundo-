@@ -9,7 +9,7 @@ const CONFIG = {
     VELOCIDAD_ENEMIGO: 1.8,
     VIDAS_INICIALES: 3,
     TIEMPO_NIVEL: 180,
-    TIEMPO_PARKOUR: 60,
+    TIEMPO_PARKOUR: 25,
     PUNTOS_PREGUNTA: 100,
     PUNTOS_ENEMIGO: 50,
     PUNTOS_NIVEL: 500,
@@ -24,12 +24,20 @@ let estadoJuego = {
     tiempoRestante: CONFIG.TIEMPO_NIVEL,
     juegoActivo: false,
     juegoPausado: false,
+    enCuentaRegresiva: false,
     enParkour: false,
     parkourCompletado: false,
+    parkourIntentado: false,
     preguntasRespondidas: 0,
     preguntasCorrectas: 0,
+    preguntasCubosRespondidasNivel: 0,
+    preguntasCubosCorrectasNivel: 0,
+    tieneLlaveSecreta: false,
     ultimasPreguntas: [],
+    partidaActualId: null,
     sonidoActivo: true,
     musicaActiva: true,
     volumen: 70
 };
+let llaveSecreta;
+let puertaSecreta;

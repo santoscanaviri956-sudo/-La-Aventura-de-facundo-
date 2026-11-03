@@ -40,6 +40,8 @@ async function cargarTodasLasImagenes() {
     await cargarImagen('nubes', 'Recursos Graficos/elementos/nubes del video juego.png');
     await cargarImagen('cuboPreguntas', 'Recursos Graficos/elementos/cubo de preguntas.png');
     await cargarImagen('cuboPreguntas2', 'Recursos Graficos/elementos/cubodepregunta.png');
+    await cargarImagen('llaveSecreta', 'Recursos Graficos/elementos/llave secreta.svg');
+    await cargarImagen('puertaSecreta', 'Recursos Graficos/elementos/puerta secreta.svg');
 
     await cargarImagen('botonSistemaPregunta', 'Recursos Graficos/botones/boton de sistema de pregunta.png');
 

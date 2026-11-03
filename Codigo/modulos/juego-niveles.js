@@ -2,6 +2,32 @@
 // ELEMENTOS DEL NIVEL
 // =========================================
 const NIVELES = {
+    0: {
+        nombre: "Tutorial",
+        fondo: 'fondo1',
+        ancho: 1150,
+        sueloY: 480,
+        plataformas: [
+            { x: 190, y: 390, ancho: 110, alto: 25 },
+            { x: 330, y: 365, ancho: 150, alto: 25 },
+            { x: 540, y: 390, ancho: 110, alto: 25 }
+        ],
+        arboles: [],
+        arbustos: [],
+        enemigos: [
+            { x: 700, y: 432, tipo: 'soldado' }
+        ],
+        bloquesMisteriosos: [
+            { x: 380, y: 290 }
+        ],
+        meta: { x: 1090, y: 420 },
+        pozos: [
+            { x: 320, y: 480, ancho: 150, alto: 120 }
+        ],
+        obstaculos: [],
+        llaveSecreta: null,
+        puertaSecreta: null
+    },
     1: {
         nombre: "La Ciudad",
         fondo: 'fondo1',
@@ -10,10 +36,10 @@ const NIVELES = {
         plataformas: [
             { x: 150, y: 375, ancho: 140, alto: 25 },
             { x: 350, y: 300, ancho: 140, alto: 25 },
-            { x: 550, y: 350, ancho: 140, alto: 25 },
+            { x: 550, y: 370, ancho: 140, alto: 25 },
             { x: 750, y: 270, ancho: 140, alto: 25 },
-            { x: 960, y: 350, ancho: 130, alto: 25 },
-            { x: 1110, y: 285, ancho: 90, alto: 25 }
+            { x: 960, y: 370, ancho: 130, alto: 25 },
+            { x: 1110, y: 295, ancho: 90, alto: 25 }
         ],
         arboles: [],
         arbustos: [],
@@ -42,12 +68,11 @@ const NIVELES = {
             { x: 120, y: 390, ancho: 130, alto: 25 },
             { x: 320, y: 330, ancho: 130, alto: 25 },
             { x: 520, y: 370, ancho: 130, alto: 25 },
-            { x: 720, y: 300, ancho: 130, alto: 25 },
-            { x: 250, y: 360, ancho: 100, alto: 25 },
-            { x: 600, y: 270, ancho: 100, alto: 25 },
+
+            { x: 680, y: 270, ancho: 100, alto: 25 },
             { x: 900, y: 360, ancho: 120, alto: 25 },
             { x: 1080, y: 290, ancho: 110, alto: 25 },
-            { x: 1260, y: 350, ancho: 130, alto: 25 }
+            { x: 1300, y: 370, ancho: 130, alto: 25 }
         ],
         arboles: [],
         arbustos: [],
@@ -80,11 +105,11 @@ const NIVELES = {
             { x: 270, y: 330, ancho: 110, alto: 25 },
             { x: 440, y: 380, ancho: 110, alto: 25 },
             { x: 610, y: 300, ancho: 110, alto: 25 },
-            { x: 780, y: 350, ancho: 110, alto: 25 },
+            { x: 800, y: 350, ancho: 110, alto: 25 },
             { x: 960, y: 280, ancho: 100, alto: 25 },
             { x: 1130, y: 370, ancho: 100, alto: 25 },
             { x: 1300, y: 300, ancho: 100, alto: 25 },
-            { x: 1480, y: 350, ancho: 120, alto: 25 }
+            { x: 1480, y: 380, ancho: 120, alto: 25 }
         ],
         arboles: [],
         arbustos: [],
@@ -101,7 +126,7 @@ const NIVELES = {
             { x: 1560, y: 432, tipo: 'caudillo' }
         ],
         bloquesMisteriosos: [
-            { x: 132, y: 360 },
+            { x: 80, y: 360 },
             { x: 472, y: 330 },
             { x: 812, y: 300 },
             { x: 992, y: 230 },
@@ -117,10 +142,8 @@ const NIVELES = {
         ancho: 2000,
         sueloY: 480,
         plataformas: [
-            { x: 80, y: 420, ancho: 100, alto: 25 },
-            { x: 220, y: 340, ancho: 100, alto: 25 },
-            { x: 360, y: 390, ancho: 100, alto: 25 },
-            { x: 500, y: 310, ancho: 100, alto: 25 },
+            { x: 220, y: 370, ancho: 100, alto: 25 },
+            { x: 450, y: 310, ancho: 100, alto: 25 },
             { x: 640, y: 370, ancho: 100, alto: 25 },
             { x: 780, y: 285, ancho: 100, alto: 25 },
             { x: 940, y: 360, ancho: 100, alto: 25 },
@@ -149,7 +172,7 @@ const NIVELES = {
             { x: 1900, y: 432, tipo: 'soldado' }
         ],
         bloquesMisteriosos: [
-            { x: 107, y: 370 },
+            { x: 180, y: 300 },
             { x: 387, y: 340 },
             { x: 807, y: 235 },
             { x: 967, y: 310 },
@@ -167,9 +190,8 @@ const NIVELES = {
         ancho: 2300,
         sueloY: 480,
         plataformas: [
-            { x: 70, y: 425, ancho: 90, alto: 25 },
-            { x: 200, y: 350, ancho: 90, alto: 25 },
-            { x: 330, y: 405, ancho: 90, alto: 25 },
+  
+            { x: 200, y: 370, ancho: 90, alto: 25 },
             { x: 460, y: 325, ancho: 90, alto: 25 },
             { x: 590, y: 380, ancho: 90, alto: 25 },
             { x: 720, y: 300, ancho: 90, alto: 25 },
@@ -206,7 +228,7 @@ const NIVELES = {
             { x: 2160, y: 432, tipo: 'soldado' }
         ],
         bloquesMisteriosos: [
-            { x: 92, y: 375 },
+            { x: 130, y: 310 },
             { x: 352, y: 355 },
             { x: 742, y: 250 },
             { x: 882, y: 315 },
@@ -225,14 +247,14 @@ const NIVELES = {
 };
 
 Object.entries(NIVELES).forEach(([numeroNivel, nivel]) => {
+    if (numeroNivel === '0') return;
+
     const inicioTramoExtra = nivel.ancho;
 
     nivel.ancho += 360;
     nivel.plataformas.push(
-        { x: inicioTramoExtra + 40, y: 390, ancho: 110, alto: 25 },
-        { x: inicioTramoExtra + 180, y: 315, ancho: 110, alto: 25 },
         { x: inicioTramoExtra + 300, y: 400, ancho: 60, alto: 25 },
-        { x: inicioTramoExtra + 80, y: 250, ancho: 90, alto: 25 },
+        { x: inicioTramoExtra + 50, y: 280, ancho: 90, alto: 25 },
         { x: inicioTramoExtra + 230, y: 190, ancho: 90, alto: 25 },
         { x: inicioTramoExtra + 330, y: 130, ancho: 30, alto: 25 }
     );
@@ -264,7 +286,7 @@ Object.entries(NIVELES).forEach(([numeroNivel, nivel]) => {
     const pozo = nivel.pozos[0];
     const invadeElPozo = (obstaculo) =>
         obstaculo.x < pozo.x + pozo.ancho &&
-        obstaculo.x + obstaculo.ancho > pozo.x;
+        obstaculo.x + (obstaculo.ancho ?? 44) > pozo.x;
 
     nivel.plataformas = nivel.plataformas.filter((plataforma) => !invadeElPozo(plataforma));
     nivel.enemigos = nivel.enemigos.filter((enemigo) => !invadeElPozo(enemigo));
@@ -275,14 +297,9 @@ Object.entries(NIVELES).forEach(([numeroNivel, nivel]) => {
 
     const obstaculosPorNivel = {
         1: [
-            { x: 260, y: 448, ancho: 54, alto: 32, tipo: 'piedras' },
             { x: 1040, y: 420, ancho: 30, alto: 60, tipo: 'barrera' }
         ],
-        2: [
-            { x: 460, y: 442, ancho: 70, alto: 38, tipo: 'pinchos' },
-            { x: 1180, y: 425, ancho: 44, alto: 55, tipo: 'tronco' },
-            { x: inicioTramoExtra + 270, y: 442, ancho: 70, alto: 38, tipo: 'pinchos' }
-        ],
+        2: [],
         3: [
             { x: 620, y: 400, ancho: 44, alto: 80, tipo: 'barrera' },
             { x: 1080, y: 442, ancho: 88, alto: 38, tipo: 'piedras' },
@@ -340,14 +357,36 @@ Object.entries(NIVELES).forEach(([numeroNivel, nivel]) => {
         y: Math.max(75, bloque.y - dificultad * 8)
     }));
     nivel.meta.x = nivel.ancho - 50;
+    nivel.llaveSecreta = numeroNivel === '5'
+        ? { x: nivel.ancho - 390, y: nivel.sueloY - 38 }
+        : null;
+    nivel.puertaSecreta = numeroNivel === '5'
+        ? { x: nivel.meta.x - 105, y: nivel.sueloY - 70 }
+        : null;
     const inicioZonaMeta = nivel.meta.x - 140;
     nivel.obstaculos = nivel.obstaculos.filter((obstaculo) =>
         obstaculo.x + obstaculo.ancho <= inicioZonaMeta || obstaculo.x >= nivel.meta.x + 50
     );
     nivel.enemigos = nivel.enemigos.filter((enemigo) =>
-        enemigo.x + enemigo.ancho <= inicioZonaMeta || enemigo.x >= nivel.meta.x + 50
+        enemigo.x + (enemigo.ancho ?? 44) <= inicioZonaMeta || enemigo.x >= nivel.meta.x + 50
     );
+
+    if (nivel.enemigos.length === 0) {
+        const pozo = nivel.pozos[0];
+        const xIzquierda = Math.max(80, pozo.x - 150);
+        const xDerecha = Math.min(nivel.ancho - 120, pozo.x + pozo.ancho + 150);
+        nivel.enemigos = [
+            { x: xIzquierda, y: nivel.sueloY, tipo: 'soldado' },
+            { x: xDerecha, y: nivel.sueloY, tipo: 'gauche' }
+        ];
+    }
+
+    if (numeroNivel === '1') {
+        nivel.enemigos.forEach((enemigo) => {
+            enemigo.limiteIzquierdo = 50;
+            enemigo.limiteDerecho = enemigo.x + 120;
+        });
+    }
 });
 
 // =========================================
-

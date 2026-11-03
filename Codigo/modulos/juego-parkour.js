@@ -1,9 +1,13 @@
 // Este archivo controla el parkour.
 // PARKOUR
 // =========================================
+let enemigosParkour = [];
+
 function iniciarNivelParkour() {
+    solicitarModoHorizontal();
     estadoJuego.enParkour = true;
-    estadoJuego.vidas = CONFIG.VIDAS_INICIALES;
+    estadoJuego.parkourIntentado = true;
+    estadoJuego.vidas = 1;
 
     canvasParkour = document.getElementById('canvas-parkour');
     ctxParkour = canvasParkour.getContext('2d');
@@ -14,24 +18,40 @@ function iniciarNivelParkour() {
     jugador = new Jugador(50, 430);
 
     const plataformasParkour = [
-        { x: 0, y: 480, ancho: 200, alto: 60 },
-        { x: 260, y: 430, ancho: 90, alto: 25 },
-        { x: 380, y: 380, ancho: 90, alto: 25 },
-        { x: 500, y: 330, ancho: 90, alto: 25 },
-        { x: 620, y: 280, ancho: 90, alto: 25 },
-        { x: 740, y: 230, ancho: 90, alto: 25 },
-        { x: 850, y: 170, ancho: 110, alto: 25 }
+        { x: 0, y: 480, ancho: 190, alto: 60 },
+        { x: 215, y: 430, ancho: 125, alto: 25 },
+        { x: 355, y: 365, ancho: 125, alto: 25 },
+        { x: 495, y: 300, ancho: 125, alto: 25 },
+        { x: 635, y: 235, ancho: 140, alto: 25 }
     ];
 
-    meta = new Meta(875, 110);
+    meta = new Meta(675, 175);
+    enemigosParkour = [
+        new Enemigo(235, 382, 'soldado', plataformasParkour[1].x, plataformasParkour[1].x + plataformasParkour[1].ancho),
+        new Enemigo(375, 317, 'gauche', plataformasParkour[2].x, plataformasParkour[2].x + plataformasParkour[2].ancho),
+        new Enemigo(515, 252, 'caudillo', plataformasParkour[3].x, plataformasParkour[3].x + plataformasParkour[3].ancho)
+    ];
 
     estadoJuego.tiempoRestante = CONFIG.TIEMPO_PARKOUR;
     estadoJuego.juegoActivo = true;
+    estadoJuego.juegoPausado = true;
+    document.getElementById('hud-tiempo-parkour').textContent =
+        formatearTiempo(estadoJuego.tiempoRestante);
 
     mostrarPantalla('pantalla-parkour');
+    actualizarReproduccionMusica();
 
     if (animacionParkour) cancelAnimationFrame(animacionParkour);
-    bucleDelParkour(plataformasParkour);
+    dibujarParkour(plataformasParkour);
+    iniciarCuentaRegresiva(
+        document.querySelector('#pantalla-parkour .juego-contenedor'),
+        () => {
+            if (!estadoJuego.juegoActivo || !estadoJuego.enParkour ||
+                estadoJuego.pantallaActual !== 'pantalla-parkour') return;
+            estadoJuego.juegoPausado = false;
+            bucleDelParkour(plataformasParkour);
+        }
+    );
 }
 
 function bucleDelParkour(plataformas) {
@@ -44,16 +64,35 @@ function bucleDelParkour(plataformas) {
         return;
     }
 
-    if (jugador.actualizar(teclas, plataformas, 480)) {
+    if (jugador.actualizar(teclas, plataformas, CONFIG.ALTO_CANVAS + 100, 760)) {
         mostrarGameOver();
         return;
     }
 
+    enemigosParkour.forEach((enemigo) => {
+        enemigo.actualizar(plataformas, CONFIG.ALTO_CANVAS + 100, 760, [], true);
+        const hitboxEnemigo = obtenerHitboxEnemigo(enemigo);
+        if (enemigo.vivo && jugador.colisionaCon(hitboxEnemigo)) {
+            if (jugador.velocidadY > 0 && jugador.y + jugador.alto - 10 < enemigo.y + enemigo.alto / 2) {
+                enemigo.morir();
+                estadoJuego.puntaje += CONFIG.PUNTOS_ENEMIGO;
+                jugador.velocidadY = CONFIG.FUERZA_SALTO / 2;
+            } else if (jugador.inmunidad === 0) {
+                mostrarGameOver();
+            }
+        }
+    });
+
+    if (!estadoJuego.juegoActivo) return;
+
     if (jugador.colisionaCon(meta)) {
+        estadoJuego.juegoActivo = false;
         estadoJuego.parkourCompletado = true;
-        estadoJuego.vidas = CONFIG.VIDAS_INICIALES;
-        estadoJuego.puntaje += 200;
-        mostrarVictoria();
+        mostrarPregunta(() => {
+            estadoJuego.vidas = 1;
+            estadoJuego.puntaje += 200;
+            cargarNivel(estadoJuego.nivelActual);
+        });
         return;
     }
 
@@ -102,6 +141,7 @@ function dibujarParkour(plataformas) {
     });
 
     meta.dibujar(ctxParkour);
+    enemigosParkour.forEach((enemigo) => enemigo.dibujar(ctxParkour));
     jugador.dibujar(ctxParkour);
 
     ctxParkour.fillStyle = 'rgba(139, 0, 0, 0.85)';
@@ -110,11 +150,10 @@ function dibujarParkour(plataformas) {
     ctxParkour.lineWidth = 2;
     ctxParkour.strokeRect(CONFIG.ANCHO_CANVAS/2 - 100, 48, 200, 35);
     ctxParkour.fillStyle = '#FFD700';
-    ctxParkour.font = 'bold 15px Arial';
+    ctxParkour.font = '7px "Press Start 2P", monospace';
     ctxParkour.textAlign = 'center';
     ctxParkour.textBaseline = 'middle';
     ctxParkour.fillText('¡PARKOUR - RECUPERA UNA VIDA!', CONFIG.ANCHO_CANVAS/2, 66);
 }
 
 // =========================================
-

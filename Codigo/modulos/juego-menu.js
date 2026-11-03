@@ -2,6 +2,7 @@
 // FUNCIONES DE PANTALLA
 // =========================================
 function mostrarPantalla(idPantalla) {
+    cancelarCuentaRegresiva();
     document.querySelectorAll('.pantalla').forEach(p => {
         p.classList.remove('activa');
     });
@@ -11,11 +12,28 @@ function mostrarPantalla(idPantalla) {
         estadoJuego.pantallaActual = idPantalla;
     }
 
+    if (idPantalla === 'pantalla-menu' && document.body.classList.contains('dispositivo-movil')) {
+        solicitarModoHorizontal();
+    }
+
+    if (idPantalla === 'pantalla-menu') {
+        actualizarReproduccionMusica();
+    }
+
     if (idPantalla === 'pantalla-creditos') {
         iniciarParticulasCreditos();
     } else {
         detenerParticulasCreditos();
     }
+
+    if (idPantalla === 'pantalla-niveles') {
+        actualizarCandadosNiveles();
+    }
+
+        if (idPantalla === 'pantalla-progreso') {
+            mostrarPartidasUsuario();
+        }
+
 }
 
 function iniciarParticulasCreditos() {
@@ -42,10 +60,24 @@ function detenerParticulasCreditos() {
 // =========================================
 // FUNCIONES DEL MENU
 // =========================================
+let pantallaRetornoOpciones = 'pantalla-menu';
+
+function abrirOpciones(pantallaRetorno) {
+    pantallaRetornoOpciones = pantallaRetorno;
+    mostrarPantalla('pantalla-opciones');
+}
+
+function volverDesdeOpciones() {
+    const pantallaDestino = pantallaRetornoOpciones;
+    pantallaRetornoOpciones = 'pantalla-menu';
+    mostrarPantalla(pantallaDestino);
+}
+
 function iniciarJuego() {
     estadoJuego.vidas = CONFIG.VIDAS_INICIALES;
     estadoJuego.puntaje = 0;
     estadoJuego.parkourCompletado = false;
+    estadoJuego.parkourIntentado = false;
     mostrarPantalla('pantalla-niveles');
 }
 
@@ -59,8 +91,11 @@ function toggleSonido() {
 function toggleMusica() {
     estadoJuego.musicaActiva = !estadoJuego.musicaActiva;
     const btn = document.getElementById('btn-musica');
-    btn.textContent = estadoJuego.musicaActiva ? 'ON' : 'OFF';
-    btn.classList.toggle('off', !estadoJuego.musicaActiva);
+    if (btn) {
+        btn.textContent = estadoJuego.musicaActiva ? 'ON' : 'OFF';
+        btn.classList.toggle('off', !estadoJuego.musicaActiva);
+    }
+    actualizarReproduccionMusica();
 }
 
 function volverAlMenu() {
@@ -71,4 +106,3 @@ function volverAlMenu() {
 }
 
 // =========================================
-

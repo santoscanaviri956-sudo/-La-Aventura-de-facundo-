@@ -81,7 +81,7 @@ function mostrarGameOver() {
     document.getElementById('gameover-puntaje').textContent = estadoJuego.puntaje;
 
     const opcionesParkour = document.getElementById('gameover-opciones-especiales');
-    if (!estadoJuego.parkourCompletado) {
+    if (estadoJuego.vidas <= 0 && !estadoJuego.parkourCompletado && !estadoJuego.parkourIntentado && !estadoJuego.enParkour) {
         opcionesParkour.classList.remove('oculto');
     } else {
         opcionesParkour.classList.add('oculto');
@@ -91,6 +91,17 @@ function mostrarGameOver() {
 }
 
 function reiniciarNivel() {
+    if (estadoJuego.enParkour) {
+        estadoJuego.enParkour = false;
+        estadoJuego.nivelActual = 1;
+        estadoJuego.vidas = CONFIG.VIDAS_INICIALES;
+        estadoJuego.puntaje = 0;
+        estadoJuego.parkourCompletado = false;
+        estadoJuego.parkourIntentado = false;
+        cargarNivel(1);
+        return;
+    }
+
     estadoJuego.vidas = CONFIG.VIDAS_INICIALES;
     estadoJuego.puntaje = 0;
     cargarNivel(estadoJuego.nivelActual);

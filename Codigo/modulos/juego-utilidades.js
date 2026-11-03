@@ -1,6 +1,70 @@
 // Este archivo contiene funciones pequenas que se reutilizan.
 // UTILIDADES
 // =========================================
+let temporizadorCuentaRegresiva = null;
+let identificadorCuentaRegresiva = 0;
+let elementoCuentaRegresiva = null;
+
+function cancelarCuentaRegresiva() {
+    identificadorCuentaRegresiva++;
+    if (temporizadorCuentaRegresiva !== null) {
+        clearTimeout(temporizadorCuentaRegresiva);
+        temporizadorCuentaRegresiva = null;
+    }
+    if (elementoCuentaRegresiva) {
+        elementoCuentaRegresiva.remove();
+        elementoCuentaRegresiva = null;
+    }
+    estadoJuego.enCuentaRegresiva = false;
+    Object.keys(teclas).forEach((tecla) => {
+        teclas[tecla] = false;
+    });
+}
+
+function iniciarCuentaRegresiva(contenedor, alComenzar) {
+    if (!contenedor) {
+        throw new Error('No se encontró el contenedor para mostrar la cuenta regresiva.');
+    }
+
+    cancelarCuentaRegresiva();
+    const identificador = identificadorCuentaRegresiva;
+    const cuenta = document.createElement('div');
+    cuenta.className = 'cuenta-regresiva';
+    cuenta.setAttribute('role', 'status');
+    cuenta.setAttribute('aria-live', 'assertive');
+    contenedor.appendChild(cuenta);
+    elementoCuentaRegresiva = cuenta;
+    estadoJuego.enCuentaRegresiva = true;
+
+    const pasos = ['3', '2', '1', 'YA'];
+    let indice = 0;
+    const mostrarSiguientePaso = () => {
+        if (identificador !== identificadorCuentaRegresiva) return;
+
+        cuenta.textContent = pasos[indice];
+        if (pasos[indice] === 'YA') {
+            cuenta.classList.add('cuenta-regresiva-inicio');
+            estadoJuego.enCuentaRegresiva = false;
+            Object.keys(teclas).forEach((tecla) => {
+                teclas[tecla] = false;
+            });
+            alComenzar();
+            temporizadorCuentaRegresiva = setTimeout(() => {
+                if (identificador !== identificadorCuentaRegresiva) return;
+                cuenta.remove();
+                elementoCuentaRegresiva = null;
+                temporizadorCuentaRegresiva = null;
+            }, 700);
+            return;
+        }
+
+        indice++;
+        temporizadorCuentaRegresiva = setTimeout(mostrarSiguientePaso, 1000);
+    };
+
+    mostrarSiguientePaso();
+}
+
 function dibujarImagenSegura(contexto, imagen, ...argumentos) {
     if (!imagen || !imagen.complete || !imagen.naturalWidth) return false;
     try {
@@ -21,6 +85,34 @@ function actualizarHUD() {
     actualizarVidasHUD();
     document.getElementById('hud-puntaje-texto').textContent = estadoJuego.puntaje;
     document.getElementById('hud-tiempo-texto').textContent = formatearTiempo(estadoJuego.tiempoRestante);
+
+    const nivel = NIVELES[estadoJuego.nivelActual];
+    if (!nivel || !jugador) return;
+
+        const puntoFinal = meta ? meta.x : nivel.ancho;
+        const posicionJugador = jugador.x + jugador.ancho / 2;
+        const progreso = Math.min(100, Math.max(0, (posicionJugador / Math.max(1, puntoFinal)) * 100));
+    let barra = document.getElementById('hud-progreso-fill');
+    let texto = document.getElementById('hud-progreso-texto');
+
+    if (!barra) {
+        const juegoContenedor = document.querySelector('#pantalla-juego .juego-contenedor');
+        const canvasJuego = juegoContenedor?.querySelector('#canvas-juego');
+        if (juegoContenedor && canvasJuego) {
+            const hudCentro = document.createElement('div');
+            hudCentro.className = 'hud-centro';
+            hudCentro.innerHTML = '<div class="hud-progreso"><div class="hud-progreso-track" role="progressbar" aria-label="Progreso del nivel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="hud-progreso-fill" class="hud-progreso-fill"></div></div><span id="hud-progreso-texto" class="hud-progreso-texto">0%</span></div>';
+            juegoContenedor.insertBefore(hudCentro, canvasJuego.nextSibling);
+            barra = hudCentro.querySelector('#hud-progreso-fill');
+            texto = hudCentro.querySelector('#hud-progreso-texto');
+        }
+    }
+
+        if (barra) {
+            barra.style.width = `${progreso}%`;
+            barra.setAttribute('aria-valuenow', `${Math.round(progreso)}`);
+        }
+    if (texto) texto.textContent = `${Math.round(progreso)}%`;
 }
 
 function actualizarVidasHUD() {
@@ -118,5 +210,3 @@ function dibujarObstaculo(contexto, obstaculo) {
 
     contexto.restore();
 }
-
-

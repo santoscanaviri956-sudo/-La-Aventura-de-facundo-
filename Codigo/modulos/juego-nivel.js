@@ -1,9 +1,23 @@
 // Este archivo prepara y ejecuta los niveles.
 // FUNCIONES DEL JUEGO
 // =========================================
-function cargarNivel(numeroNivel) {
+function obtenerHitboxEnemigo(enemigo) {
+    const margenLateral = 6;
+    return {
+        x: enemigo.x + margenLateral,
+        y: enemigo.y,
+        ancho: enemigo.ancho - margenLateral * 2,
+        alto: enemigo.alto
+    };
+}
+
+let avisoMetaBloqueadaActivo = false;
+
+function cargarNivel(numeroNivel, conservarEstadisticas = false) {
+    solicitarModoHorizontal();
     estadoJuego.nivelActual = numeroNivel;
     estadoJuego.enParkour = false;
+    avisoMetaBloqueadaActivo = false;
 
     const nivel = NIVELES[numeroNivel];
     if (!nivel) return;
@@ -13,23 +27,58 @@ function cargarNivel(numeroNivel) {
     canvas.width = CONFIG.ANCHO_CANVAS;
     canvas.height = CONFIG.ALTO_CANVAS;
 
-        jugador = new Jugador(50, nivel.sueloY - CONFIG.TAMANO_PERSONAJE);
-    enemigos = nivel.enemigos.map(e => new Enemigo(e.x, e.y, e.tipo));
+        jugador = new Jugador(0, nivel.sueloY - CONFIG.TAMANO_PERSONAJE);
+    enemigos = nivel.enemigos.map(e =>
+        new Enemigo(e.x, e.y, e.tipo, e.limiteIzquierdo, e.limiteDerecho)
+    );
     bloquesMisteriosos = nivel.bloquesMisteriosos.map(b => new BloqueMisterioso(b.x, b.y));
     meta = new Meta(nivel.meta.x, nivel.meta.y);
+    llaveSecreta = nivel.llaveSecreta
+        ? new LlaveSecreta(nivel.llaveSecreta.x, nivel.llaveSecreta.y)
+        : null;
+    puertaSecreta = nivel.puertaSecreta
+        ? new PuertaSecreta(nivel.puertaSecreta.x, nivel.puertaSecreta.y)
+        : null;
+    estadoJuego.tieneLlaveSecreta = false;
 
     estadoJuego.tiempoRestante = CONFIG.TIEMPO_NIVEL;
-    estadoJuego.preguntasRespondidas = 0;
-    estadoJuego.preguntasCorrectas = 0;
+    estadoJuego.preguntasCubosRespondidasNivel = 0;
+    estadoJuego.preguntasCubosCorrectasNivel = 0;
+    if (!conservarEstadisticas) {
+        estadoJuego.preguntasRespondidas = 0;
+        estadoJuego.preguntasCorrectas = 0;
+    }
     estadoJuego.juegoActivo = true;
-    estadoJuego.juegoPausado = false;
+    estadoJuego.juegoPausado = true;
+
+    const pantallaJuego = document.getElementById('pantalla-juego');
+    if (pantallaJuego) {
+        pantallaJuego.classList.toggle('tutorial-activo', numeroNivel === 0);
+    }
+
+    const ayudaTutorial = document.getElementById('tutorial-ayuda');
+    if (ayudaTutorial) {
+        ayudaTutorial.textContent = numeroNivel === 0
+            ? 'Muévete con A/D o las flechas. Salta con W, ↑ o espacio. Golpea el cubo desde abajo saltando para abrir una pregunta; responde y recoge todos los cubos antes de llegar a la meta.'
+            : 'Muévete con A/D o las flechas. Salta con W, ↑ o espacio para cruzar el pozo. Recoge la llave y pulsa Z junto a la puerta para abrirla; luego llega a la meta.';
+        ayudaTutorial.classList.toggle('oculto', numeroNivel !== 0);
+    }
 
     actualizarHUD();
     mostrarPantalla('pantalla-juego');
+    actualizarReproduccionMusica();
     dibujarNivel(nivel);
 
     if (animacionJuego) cancelAnimationFrame(animacionJuego);
-    bucleDelJuego();
+    iniciarCuentaRegresiva(
+        document.querySelector('#pantalla-juego .juego-contenedor'),
+        () => {
+            if (!estadoJuego.juegoActivo || estadoJuego.enParkour ||
+                estadoJuego.pantallaActual !== 'pantalla-juego') return;
+            estadoJuego.juegoPausado = false;
+            bucleDelJuego();
+        }
+    );
 }
 
 function bucleDelJuego() {
@@ -49,9 +98,28 @@ function bucleDelJuego() {
         return;
     }
 
+    if (puertaSecreta) {
+        const estaEnLaPuerta = jugador.colisionaCon(puertaSecreta);
+        if (!puertaSecreta.abierta && estadoJuego.tieneLlaveSecreta && estaEnLaPuerta && (teclas.z || teclas.Z)) {
+            puertaSecreta.abierta = true;
+        }
+
+        if (!puertaSecreta.abierta && estaEnLaPuerta) {
+            jugador.x = jugador.xAnterior;
+            jugador.velocidadX = 0;
+        }
+    }
+
+    if (llaveSecreta) llaveSecreta.actualizar();
+    if (puertaSecreta) puertaSecreta.actualizar();
+    if (llaveSecreta && llaveSecreta.activa && jugador.colisionaCon(llaveSecreta)) {
+        llaveSecreta.recoger();
+        estadoJuego.tieneLlaveSecreta = true;
+    }
+
     if (jugador.inmunidad === 0 && jugadorCayoEnPozo(jugador, nivel.pozos)) {
         perderVida();
-        jugador.x = 50;
+        jugador.x = 0;
         jugador.y = nivel.sueloY - jugador.alto;
         jugador.velocidadX = 0;
         jugador.velocidadY = 0;
@@ -60,7 +128,7 @@ function bucleDelJuego() {
 
     if (jugador.inmunidad === 0 && jugadorGolpeoObstaculo(jugador, nivel.obstaculos)) {
         perderVida();
-        jugador.x = 50;
+        jugador.x = 0;
         jugador.y = nivel.sueloY - jugador.alto;
         jugador.velocidadX = 0;
         jugador.velocidadY = 0;
@@ -78,7 +146,9 @@ function bucleDelJuego() {
     meta.actualizar();
 
     enemigos.forEach(enemigo => {
-        if (enemigo.vivo && jugador.colisionaCon(enemigo)) {
+        const hitboxEnemigo = obtenerHitboxEnemigo(enemigo);
+
+        if (enemigo.vivo && jugador.colisionaCon(hitboxEnemigo)) {
             if (jugador.velocidadY > 0 && jugador.y + jugador.alto - 10 < enemigo.y + enemigo.alto/2) {
                 enemigo.morir();
                 estadoJuego.puntaje += CONFIG.PUNTOS_ENEMIGO;
@@ -94,7 +164,19 @@ function bucleDelJuego() {
         resolverColisionBloque(jugador, bloque);
     });
 
-    if (jugador.colisionaCon(meta)) {
+    if (estadoJuego.juegoPausado) return;
+
+    if (jugador.colisionaCon(meta) && bloquesMisteriosos.some((bloque) => bloque.activo)) {
+        jugador.x = jugador.xAnterior;
+        jugador.velocidadX = 0;
+        if (!avisoMetaBloqueadaActivo) {
+            avisoMetaBloqueadaActivo = true;
+            mostrarMensajeProgreso('¡No agarraste todos los cubos de preguntas de este nivel! Recoge los que faltan antes de llegar a la meta.');
+            setTimeout(() => {
+                avisoMetaBloqueadaActivo = false;
+            }, 2200);
+        }
+    } else if (jugador.colisionaCon(meta)) {
         completarNivel();
         return;
     }
@@ -128,18 +210,25 @@ function dibujarNivel(nivel) {
             fondo2: 245
         };
         const recorteSuperior = recortesSuperiores[nivel.fondo] || 0;
-        dibujarImagenSegura(
-            ctx,
-            imagenFondo,
-            0,
-            recorteSuperior,
-            imagenFondo.width,
-            imagenFondo.height - recorteSuperior,
-            0,
-            0,
-            anchoNivel,
-            CONFIG.ALTO_CANVAS
-        );
+        const altoFondo = CONFIG.ALTO_CANVAS;
+        const anchoFondo = Math.max(1, Math.round(
+            (imagenFondo.width / Math.max(1, imagenFondo.height - recorteSuperior)) * altoFondo
+        ));
+
+        for (let x = 0; x < anchoNivel; x += anchoFondo) {
+            dibujarImagenSegura(
+                ctx,
+                imagenFondo,
+                0,
+                recorteSuperior,
+                imagenFondo.width,
+                imagenFondo.height - recorteSuperior,
+                x,
+                0,
+                anchoFondo,
+                altoFondo
+            );
+        }
     } else {
         const gradiente = ctx.createLinearGradient(0, 0, 0, CONFIG.ALTO_CANVAS);
         gradiente.addColorStop(0, '#87CEEB');
@@ -232,6 +321,9 @@ function dibujarNivel(nivel) {
         bloque.dibujar(ctx);
     });
 
+    if (llaveSecreta) llaveSecreta.dibujar(ctx);
+    if (puertaSecreta) puertaSecreta.dibujar(ctx);
+
     meta.dibujar(ctx);
 
     enemigos.forEach(enemigo => {
@@ -254,17 +346,21 @@ function dibujarNivel(nivel) {
 
     ctx.restore();
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-    ctx.fillRect(CONFIG.ANCHO_CANVAS/2 - 65, 8, 130, 32);
-    ctx.strokeStyle = '#ffd700';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(CONFIG.ANCHO_CANVAS/2 - 65, 8, 130, 32);
-    ctx.fillStyle = '#ffd700';
-    ctx.font = 'bold 16px Arial';
+    ctx.font = '10px "Press Start 2P", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('NIVEL ' + estadoJuego.nivelActual + ' - ' + NIVELES[estadoJuego.nivelActual].nombre.toUpperCase(), CONFIG.ANCHO_CANVAS/2, 24);
+    const textoNivel = 'NIVEL ' + estadoJuego.nivelActual + ' - ' + NIVELES[estadoJuego.nivelActual].nombre.toUpperCase();
+    const anchoCaja = Math.min(CONFIG.ANCHO_CANVAS - 16, Math.max(130, ctx.measureText(textoNivel).width + 24));
+    const xCaja = (CONFIG.ANCHO_CANVAS - anchoCaja) / 2;
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+    ctx.fillRect(xCaja, 8, anchoCaja, 32);
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(xCaja, 8, anchoCaja, 32);
+    ctx.fillStyle = '#ffd700';
+    ctx.textAlign = 'center';
+    ctx.fillText(textoNivel, CONFIG.ANCHO_CANVAS / 2, 24, anchoCaja - 16);
 }
 
 // =========================================
-

@@ -14,7 +14,7 @@ function resolverColisionBloque(jugador, bloque) {
         jugador.y = bloque.y + bloque.alto;
         jugador.velocidadY = 0;
         bloque.desactivar();
-        mostrarPregunta();
+        mostrarPregunta(null, true);
         return true;
     }
 

@@ -58,6 +58,33 @@ class Jugador {
         this.y += this.velocidadY;
         this.enSuelo = false;
 
+        for (let plataforma of plataformas) {
+            const seSuperponeHorizontalmente =
+                this.x < plataforma.x + plataforma.ancho &&
+                this.x + this.ancho > plataforma.x;
+            if (!seSuperponeHorizontalmente) continue;
+
+            const parteInferiorAnterior = this.yAnterior + this.alto;
+            const parteInferiorActual = this.y + this.alto;
+            const parteInferiorPlataforma = plataforma.y + plataforma.alto;
+            const golpeoDesdeAbajo = this.velocidadY < 0 &&
+                this.yAnterior >= parteInferiorPlataforma &&
+                this.y <= parteInferiorPlataforma;
+            const aterrizoSobrePlataforma = this.velocidadY >= 0 &&
+                parteInferiorAnterior <= plataforma.y &&
+                parteInferiorActual >= plataforma.y;
+
+            if (golpeoDesdeAbajo) {
+                this.y = parteInferiorPlataforma;
+                this.velocidadY = 0;
+            } else if (aterrizoSobrePlataforma) {
+                this.y = plataforma.y - this.alto;
+                this.enSuelo = true;
+                this.estado = 'idle';
+                this.velocidadY = 0;
+            }
+        }
+
         const estaCompletamenteSobreUnPozo = pozos.some((pozo) =>
             this.x >= pozo.x &&
             this.x + this.ancho <= pozo.x + pozo.ancho
@@ -70,16 +97,6 @@ class Jugador {
                 this.estado = 'idle';
             }
             this.velocidadY = 0;
-        }
-        for (let plataforma of plataformas) {
-            if (this.colisionaCon(plataforma)) {
-                if (this.velocidadY >= 0) {
-                    this.y = plataforma.y - this.alto;
-                    this.enSuelo = true;
-                    this.estado = 'idle';
-                }
-                this.velocidadY = 0;
-            }
         }
 
         if (this.x < 0) this.x = 0;
@@ -189,38 +206,84 @@ class Jugador {
 // CLASE ENEMIGO
 // =========================================
 class Enemigo {
-    constructor(x, y, tipo) {
+    constructor(x, y, tipo, limiteIzquierdo = null, limiteDerecho = null) {
         this.x = x;
         this.y = y;
         this.ancho = 44;
         this.alto = 48;
         this.tipo = tipo;
+        this.limiteIzquierdo = limiteIzquierdo;
+        this.limiteDerecho = limiteDerecho;
         this.velocidadX = CONFIG.VELOCIDAD_ENEMIGO * (Math.random() > 0.5 ? 1 : -1);
+        this.velocidadY = 0;
         this.direccion = this.velocidadX > 0 ? 1 : -1;
         this.vivo = true;
         this.tiempoAnimacion = 0;
     }
 
-    actualizar(plataformas, sueloY, anchoNivel = CONFIG.ANCHO_CANVAS, pozos = []) {
+    actualizar(plataformas, sueloY, anchoNivel = CONFIG.ANCHO_CANVAS, pozos = [], usarGravedad = false) {
         if (!this.vivo) return;
 
         const proximaX = this.x + this.velocidadX;
-        const seAcercaAlPozo = pozos.some((pozo) =>
-            proximaX + this.ancho > pozo.x &&
-            proximaX < pozo.x + pozo.ancho
+        const pozoEnElBorde = pozos.find((pozo) => {
+            const enemigoSobreElBorde = this.y + this.alto >= pozo.y - 2 && this.y <= pozo.y;
+            if (!enemigoSobreElBorde) return false;
+
+            if (this.velocidadX > 0) {
+                return this.x + this.ancho <= pozo.x && proximaX + this.ancho >= pozo.x;
+            }
+
+            if (this.velocidadX < 0) {
+                return this.x >= pozo.x + pozo.ancho && proximaX <= pozo.x + pozo.ancho;
+            }
+
+            return false;
+        });
+
+        if (pozoEnElBorde) {
+            if (this.velocidadX > 0) {
+                this.x = pozoEnElBorde.x - this.ancho - 1;
+            } else {
+                this.x = pozoEnElBorde.x + pozoEnElBorde.ancho + 1;
+            }
+            this.y = pozoEnElBorde.y - this.alto;
+            this.velocidadX *= -1;
+            this.direccion *= -1;
+            return;
+        }
+
+        const limiteIzquierdo = this.limiteIzquierdo ?? 10;
+        const limiteDerecho = this.limiteDerecho ?? anchoNivel - 10;
+        this.x = Math.max(
+            limiteIzquierdo,
+            Math.min(limiteDerecho - this.ancho, proximaX)
         );
 
-        if (seAcercaAlPozo) {
-            this.velocidadX *= -1;
-            this.direccion *= -1;
-        }
-        this.x += this.velocidadX;
-
-        if (this.x <= 10 || this.x + this.ancho >= anchoNivel - 10) {
+        if (this.x <= limiteIzquierdo || this.x + this.ancho >= limiteDerecho) {
             this.velocidadX *= -1;
             this.direccion *= -1;
         }
 
+        if (usarGravedad) {
+            const parteInferiorAnterior = this.y + this.alto;
+            this.velocidadY += CONFIG.GRAVEDAD;
+            this.y += this.velocidadY;
+
+            const plataformaAterrizada = plataformas.find((plataforma) =>
+                this.velocidadY >= 0 &&
+                parteInferiorAnterior <= plataforma.y &&
+                this.y + this.alto >= plataforma.y &&
+                this.x < plataforma.x + plataforma.ancho &&
+                this.x + this.ancho > plataforma.x
+            );
+
+            if (plataformaAterrizada) {
+                this.y = plataformaAterrizada.y - this.alto;
+                this.velocidadY = 0;
+            }
+        } else {
+            this.y = Math.min(this.y, sueloY - this.alto);
+        }
         this.tiempoAnimacion++;
     }
 
@@ -236,6 +299,7 @@ class Enemigo {
             ctx.translate(this.x, this.y);
         }
 
+        const pasoPierna = Math.sin(this.tiempoAnimacion * 0.35) * 3;
         ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
         ctx.beginPath();
         ctx.ellipse(22, 48, 16, 5, 0, 0, Math.PI * 2);
@@ -257,11 +321,11 @@ class Enemigo {
                 ctx.fillStyle = '#1a1a1a';
                 ctx.fillRect(18, -2, 8, 2);
                 ctx.fillStyle = '#2F4F4F';
-                ctx.fillRect(12, 32, 8, 14);
-                ctx.fillRect(24, 32, 8, 14);
+                ctx.fillRect(12 + pasoPierna, 32 + pasoPierna, 8, 14);
+                ctx.fillRect(24 - pasoPierna, 32 - pasoPierna, 8, 14);
                 ctx.fillStyle = '#1a1a1a';
-                ctx.fillRect(11, 40, 9, 5);
-                ctx.fillRect(23, 40, 9, 5);
+                ctx.fillRect(11 + pasoPierna, 40 + pasoPierna, 9, 5);
+                ctx.fillRect(23 - pasoPierna, 40 - pasoPierna, 9, 5);
                 ctx.fillStyle = '#8B4513';
                 ctx.fillRect(34, 8, 6, 26);
                 ctx.fillStyle = '#C0C0C0';
@@ -288,11 +352,11 @@ class Enemigo {
                 ctx.fillStyle = '#1a1a1a';
                 ctx.fillRect(17, 2, 10, 3);
                 ctx.fillStyle = '#2a2a2a';
-                ctx.fillRect(12, 32, 8, 14);
-                ctx.fillRect(24, 32, 8, 14);
+                ctx.fillRect(12 + pasoPierna, 32 + pasoPierna, 8, 14);
+                ctx.fillRect(24 - pasoPierna, 32 - pasoPierna, 8, 14);
                 ctx.fillStyle = '#1a1a1a';
-                ctx.fillRect(11, 40, 9, 5);
-                ctx.fillRect(23, 40, 9, 5);
+                ctx.fillRect(11 + pasoPierna, 40 + pasoPierna, 9, 5);
+                ctx.fillRect(23 - pasoPierna, 40 - pasoPierna, 9, 5);
                 break;
 
             case 'gauche':
@@ -313,11 +377,11 @@ class Enemigo {
                 ctx.fillStyle = '#654321';
                 ctx.fillRect(17, 2, 10, 5);
                 ctx.fillStyle = '#2F4F4F';
-                ctx.fillRect(12, 32, 8, 14);
-                ctx.fillRect(24, 32, 8, 14);
+                ctx.fillRect(12 + pasoPierna, 32 + pasoPierna, 8, 14);
+                ctx.fillRect(24 - pasoPierna, 32 - pasoPierna, 8, 14);
                 ctx.fillStyle = '#654321';
-                ctx.fillRect(11, 38, 9, 7);
-                ctx.fillRect(23, 38, 9, 7);
+                ctx.fillRect(11 + pasoPierna, 38 + pasoPierna, 9, 7);
+                ctx.fillRect(23 - pasoPierna, 38 - pasoPierna, 9, 7);
                 ctx.fillStyle = '#C0C0C0';
                 ctx.fillRect(-2, 14, 10, 4);
                 ctx.fillStyle = '#8B4513';
@@ -340,11 +404,11 @@ class Enemigo {
                 ctx.fillStyle = '#654321';
                 ctx.fillRect(19, 2, 8, 3);
                 ctx.fillStyle = '#2F4F4F';
-                ctx.fillRect(12, 32, 8, 14);
-                ctx.fillRect(24, 32, 8, 14);
+                ctx.fillRect(12 + pasoPierna, 32 + pasoPierna, 8, 14);
+                ctx.fillRect(24 - pasoPierna, 32 - pasoPierna, 8, 14);
                 ctx.fillStyle = '#654321';
-                ctx.fillRect(11, 40, 9, 5);
-                ctx.fillRect(23, 40, 9, 5);
+                ctx.fillRect(11 + pasoPierna, 40 + pasoPierna, 9, 5);
+                ctx.fillRect(23 - pasoPierna, 40 - pasoPierna, 9, 5);
                 ctx.fillStyle = '#8B4513';
                 ctx.fillRect(36, -14, 5, 42);
                 ctx.fillStyle = '#C0C0C0';
@@ -424,7 +488,7 @@ class BloqueMisterioso {
             ctx.strokeRect(this.x, this.y, this.ancho, this.alto);
 
             ctx.fillStyle = '#fff';
-            ctx.font = 'bold 26px Arial';
+            ctx.font = '26px "Press Start 2P", monospace';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText('?', this.x + this.ancho/2, this.y + this.alto/2);
@@ -494,7 +558,7 @@ class Meta {
         ctx.fill();
 
         ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 14px Arial';
+        ctx.font = '10px "Press Start 2P", monospace';
         ctx.textAlign = 'center';
         ctx.fillText('META', this.x + 25, this.y - 8);
     }
@@ -507,5 +571,88 @@ class Meta {
     }
 }
 
-// =========================================
+class LlaveSecreta {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.ancho = 34;
+        this.alto = 34;
+        this.activa = true;
+        this.tiempoAnimacion = 0;
+    }
 
+    actualizar() {
+        if (this.activa) this.tiempoAnimacion++;
+    }
+
+    dibujar(ctx) {
+        if (!this.activa) return;
+        const imagen = IMAGENES['llaveSecreta'];
+        const elevacion = Math.sin(this.tiempoAnimacion * 0.08) * 4;
+        ctx.save();
+        ctx.shadowColor = '#ffe066';
+        ctx.shadowBlur = 12;
+        if (imagen && dibujarImagenSegura(ctx, imagen, this.x, this.y + elevacion, this.ancho, this.alto)) {
+            ctx.restore();
+            return;
+        }
+        ctx.translate(this.x + 17, this.y + 17 + elevacion);
+        ctx.rotate(-Math.PI / 4);
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(-7, 0, 7, 0, Math.PI * 2);
+        ctx.moveTo(0, 0);
+        ctx.lineTo(16, 0);
+        ctx.lineTo(16, 7);
+        ctx.moveTo(10, 0);
+        ctx.lineTo(10, 6);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    recoger() {
+        this.activa = false;
+    }
+}
+
+class PuertaSecreta {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.ancho = 58;
+        this.alto = 70;
+        this.abierta = false;
+        this.tiempoAnimacion = 0;
+    }
+
+    actualizar() {
+        this.tiempoAnimacion++;
+    }
+
+    dibujar(ctx) {
+        const imagen = IMAGENES['puertaSecreta'];
+        ctx.save();
+        if (imagen && dibujarImagenSegura(ctx, imagen, this.x, this.y, this.ancho, this.alto)) {
+            if (this.abierta) {
+                ctx.globalAlpha = 0.35;
+                ctx.fillStyle = '#7CFC00';
+                ctx.fillRect(this.x, this.y, this.ancho, this.alto);
+            }
+            ctx.restore();
+            return;
+        }
+        ctx.fillStyle = this.abierta ? '#2e8b57' : '#4b164c';
+        ctx.fillRect(this.x, this.y, this.ancho, this.alto);
+        ctx.strokeStyle = this.abierta ? '#7CFC00' : '#d946ef';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(this.x, this.y, this.ancho, this.alto);
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.arc(this.x + 43, this.y + 37, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+}
+
+// =========================================
