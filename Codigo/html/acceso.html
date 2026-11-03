@@ -1,0 +1,18 @@
+<!-- Acceso local del jugador. -->
+<div id="pantalla-acceso" class="pantalla activa">
+    <div class="pantalla-contenido acceso-contenido">
+        <img src="../Recursos Graficos/interfaz/logo la aventura de facundo.png" alt="La Aventura de Facundo" class="logo-principal">
+        <h2 class="titulo-pantalla">JUGADOR</h2>
+        <form id="formulario-acceso" class="formulario-acceso" onsubmit="procesarAcceso(event)">
+            <label for="nombre-usuario">Usuario</label>
+            <input id="nombre-usuario" name="usuario" type="text" maxlength="20" autocomplete="username" required>
+            <label for="clave-usuario">Clave</label>
+            <input id="clave-usuario" name="clave" type="password" maxlength="40" autocomplete="current-password" required>
+            <p id="mensaje-acceso" class="mensaje-acceso" role="status"></p>
+            <div class="acceso-botones">
+                <button type="submit" class="btn-acceso" name="accion" value="entrar" onclick="this.form.dataset.accion='entrar'">ENTRAR</button>
+                <button type="submit" class="btn-acceso btn-acceso-secundario" name="accion" value="registrar" onclick="this.form.dataset.accion='registrar'">REGISTRAR</button>
+            </div>
+        </form>
+    </div>
+</div>
