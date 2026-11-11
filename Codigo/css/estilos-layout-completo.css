@@ -909,6 +909,19 @@ body {
     opacity: 0;
 }
 
+.btn-interactuar::before {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #fff4c2;
+    content: 'Z';
+    font-family: "Press Start 2P", monospace;
+    font-size: clamp(14px, 2.4cqw, 26px);
+    line-height: 1;
+    text-shadow: 2px 2px 0 #301506, 0 0 8px rgba(255, 215, 0, 0.75);
+}
+
 .btn-control:active {
     filter: brightness(1.4);
     transform: scale(0.94);
